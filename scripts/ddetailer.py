@@ -107,15 +107,15 @@ class DetectionDetailerScript(scripts.Script):
 
         with gr.Group():
             with gr.Row():
-                dd_model_b = gr.Dropdown(label="Secondary detection model (B) (optional)", choices=model_list,value = "None", visible =True, type="value")
+                dd_model_b = gr.Dropdown(label="Secondary detection model (B) (optional)", choices=model_list,value = "None", visible =False, type="value")
 
             with gr.Row():
-                dd_conf_b = gr.Slider(label='Detection confidence threshold % (B)', minimum=0, maximum=100, step=1, value=30, visible=True)
-                dd_dilation_factor_b = gr.Slider(label='Dilation factor (B)', minimum=0, maximum=255, step=1, value=4, visible=True)
+                dd_conf_b = gr.Slider(label='Detection confidence threshold % (B)', minimum=0, maximum=100, step=1, value=30, visible=False)
+                dd_dilation_factor_b = gr.Slider(label='Dilation factor (B)', minimum=0, maximum=255, step=1, value=4, visible=False)
             
             with gr.Row():
-                dd_offset_x_b = gr.Slider(label='X offset (B)', minimum=-200, maximum=200, step=1, value=0, visible=True)
-                dd_offset_y_b = gr.Slider(label='Y offset (B)', minimum=-200, maximum=200, step=1, value=0, visible=True)
+                dd_offset_x_b = gr.Slider(label='X offset (B)', minimum=-200, maximum=200, step=1, value=0, visible=False)
+                dd_offset_y_b = gr.Slider(label='Y offset (B)', minimum=-200, maximum=200, step=1, value=0, visible=False)
         
         with gr.Group():
             with gr.Row():
@@ -221,6 +221,9 @@ class DetectionDetailerScript(scripts.Script):
             orig_image = p.init_images[0]
         else:
             p_txt = p
+            img2img_sampler_name = p_txt.sampler_name
+            if p_txt.sampler_name in ['PLMS', 'UniPC']:  # PLMS/UniPC do not support img2img so we just silently switch to DDIM
+                img2img_sampler_name = 'DDIM'
             p_txt_prompt = dd_prompt if dd_prompt else p_txt.prompt
             p_txt_neg_prompt = dd_neg_prompt if dd_neg_prompt else p_txt.negative_prompt
             p = StableDiffusionProcessingImg2Img(
@@ -244,7 +247,7 @@ class DetectionDetailerScript(scripts.Script):
                     subseed_strength=p_txt.subseed_strength,
                     seed_resize_from_h=p_txt.seed_resize_from_h,
                     seed_resize_from_w=p_txt.seed_resize_from_w,
-                    sampler_name=p_txt.sampler_name,
+                    sampler_name=img2img_sampler_name,
                     n_iter=p_txt.n_iter,
                     steps=p_txt.steps,
                     cfg_scale=dd_cfg_scale,
